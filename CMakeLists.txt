@@ -44,7 +44,7 @@ ENDIF(WIN32)
 # --- OPTIONS ----------------------------------------
 OPTION (BUILD_BENCHMARK "Build the benchmarks" OFF)
 OPTION (BUILD_UTILS "Build the utils" OFF)
-OPTION (BUILD_PYTHON_INTERFACE "Build the python binding" ON)
+OPTION (BUILD_PYTHON_INTERFACE "Build the python binding" OFF)
 OPTION (BUILD_WITH_COMMIT_VERSION "Build libraries by setting specific commit version" OFF)
 
 IF(DEFINED BUILD_UNIT_TESTS)
@@ -59,9 +59,9 @@ OPTION(BUILD_ADVANCED_TESTING "Build the advanced tests (multiprecision, etc.) o
 # --- OPTIONAL DEPENDENCIES -------------------------
 OPTION(BUILD_WITH_URDF_SUPPORT "Build the library with the URDF format support" ON)
 OPTION(BUILD_WITH_COLLISION_SUPPORT "Build the library with the Collision support (required HPP-FCL)" OFF)
-OPTION(BUILD_WITH_AUTODIFF_SUPPORT "Build the library with the Automatic Differentiation support" OFF)
+OPTION(BUILD_WITH_AUTODIFF_SUPPORT "Build the library with the Automatic Differentiation support" ON)
 OPTION(BUILD_WITH_CASADI_SUPPORT "Build the library with the CASADI support" OFF)
-OPTION(BUILD_WITH_CODEGEN_SUPPORT "Build the library with the Code Generation support" OFF)
+OPTION(BUILD_WITH_CODEGEN_SUPPORT "Build the library with the Code Generation support" ON)
 
 OPTION(INITIALIZE_WITH_NAN "Initialize Eigen entries with NaN" OFF)
 
@@ -244,19 +244,19 @@ LIST(APPEND HEADERS
 ADD_SUBDIRECTORY(src)
 
 # --- BINDINGS -----------------------------------------------------------------
-ADD_SUBDIRECTORY(bindings)
+# ADD_SUBDIRECTORY(bindings)
 
 # --- EXECUTABLES --------------------------------------------------------------
 ADD_SUBDIRECTORY(utils)
 
 # --- UNIT TESTS ---------------------------------------------------------------
-ADD_SUBDIRECTORY(unittest)
+# ADD_SUBDIRECTORY(unittest)
 
 # --- CHECK EXAMPLES -----------------------------------------------------------
-ADD_SUBDIRECTORY(examples)
+# ADD_SUBDIRECTORY(examples)
 
 # --- BENCHMARKS ---------------------------------------------------------------
-ADD_SUBDIRECTORY(benchmark)
+# ADD_SUBDIRECTORY(benchmark)
 
 # --- PACKAGING ----------------------------------------------------------------
 IF(BUILD_WITH_URDF_SUPPORT)
