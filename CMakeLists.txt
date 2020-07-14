@@ -59,9 +59,9 @@ OPTION(BUILD_ADVANCED_TESTING "Build the advanced tests (multiprecision, etc.) o
 # --- OPTIONAL DEPENDENCIES -------------------------
 OPTION(BUILD_WITH_URDF_SUPPORT "Build the library with the URDF format support" ON)
 OPTION(BUILD_WITH_COLLISION_SUPPORT "Build the library with the Collision support (required HPP-FCL)" OFF)
-OPTION(BUILD_WITH_AUTODIFF_SUPPORT "Build the library with the Automatic Differentiation support" ON)
+OPTION(BUILD_WITH_AUTODIFF_SUPPORT "Build the library with the Automatic Differentiation support" OFF)
 OPTION(BUILD_WITH_CASADI_SUPPORT "Build the library with the CASADI support" OFF)
-OPTION(BUILD_WITH_CODEGEN_SUPPORT "Build the library with the Code Generation support" ON)
+OPTION(BUILD_WITH_CODEGEN_SUPPORT "Build the library with the Code Generation support" OFF)
 
 OPTION(INITIALIZE_WITH_NAN "Initialize Eigen entries with NaN" OFF)
 
