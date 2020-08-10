@@ -241,20 +241,20 @@ LIST(APPEND HEADERS
 # --- MAIN LIBRARY -------------------------------------------------------------
 ADD_SUBDIRECTORY(src)
 
-# --- BINDINGS -----------------------------------------------------------------
-ADD_SUBDIRECTORY(bindings)
+# # --- BINDINGS -----------------------------------------------------------------
+# ADD_SUBDIRECTORY(bindings)
 
-# --- EXECUTABLES --------------------------------------------------------------
-ADD_SUBDIRECTORY(utils)
+# # --- EXECUTABLES --------------------------------------------------------------
+# ADD_SUBDIRECTORY(utils)
 
-# --- UNIT TESTS ---------------------------------------------------------------
-ADD_SUBDIRECTORY(unittest)
+# # --- UNIT TESTS ---------------------------------------------------------------
+# ADD_SUBDIRECTORY(unittest)
 
-# --- CHECK EXAMPLES -----------------------------------------------------------
-ADD_SUBDIRECTORY(examples)
+# # --- CHECK EXAMPLES -----------------------------------------------------------
+# ADD_SUBDIRECTORY(examples)
 
-# --- BENCHMARKS ---------------------------------------------------------------
-ADD_SUBDIRECTORY(benchmark)
+# # --- BENCHMARKS ---------------------------------------------------------------
+# ADD_SUBDIRECTORY(benchmark)
 
 # --- PACKAGING ----------------------------------------------------------------
 IF(BUILD_WITH_URDF_SUPPORT)
