@@ -1,9 +1,9 @@
 //
-// Copyright (c) 2015-2019 CNRS INRIA
+// Copyright (c) 2015-2020 CNRS INRIA
 //
 
-#ifndef __pinocchio_rnea_hxx__
-#define __pinocchio_rnea_hxx__
+#ifndef __pinocchio_algorithm_rnea_hxx__
+#define __pinocchio_algorithm_rnea_hxx__
 
 /// @cond DEV
 
@@ -101,9 +101,9 @@ namespace pinocchio
        const Eigen::MatrixBase<TangentVectorType2> & a)
   {
     assert(model.check(data) && "data is not consistent with model.");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(q.size() == model.nq, "The configuration vector is not of right size");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(v.size() == model.nv, "The velocity vector is not of right size");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(a.size() == model.nv, "The acceleration vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(q.size(), model.nq, "The configuration vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(v.size(), model.nv, "The velocity vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(a.size(), model.nv, "The acceleration vector is not of right size");
     
     typedef ModelTpl<Scalar,Options,JointCollectionTpl> Model;
     typedef typename Model::JointIndex JointIndex;
@@ -139,11 +139,11 @@ namespace pinocchio
        const Eigen::MatrixBase<TangentVectorType2> & a,
        const container::aligned_vector<ForceDerived> & fext)
   {
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(fext.size() == model.joints.size());
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(fext.size(), model.joints.size());
     assert(model.check(data) && "data is not consistent with model.");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(q.size() == model.nq, "The configuration vector is not of right size");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(v.size() == model.nv, "The velocity vector is not of right size");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(a.size() == model.nv, "The acceleration vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(q.size(), model.nq, "The configuration vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(v.size(), model.nv, "The velocity vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(a.size(), model.nv, "The acceleration vector is not of right size");
     
     typedef ModelTpl<Scalar,Options,JointCollectionTpl> Model;
     typedef typename Model::JointIndex JointIndex;
@@ -246,8 +246,8 @@ namespace pinocchio
                    const Eigen::MatrixBase<TangentVectorType> & v)
   {
     assert(model.check(data) && "data is not consistent with model.");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(q.size() == model.nq, "The configuration vector is not of right size");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(v.size() == model.nv, "The velocity vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(q.size(), model.nq, "The configuration vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(v.size(), model.nv, "The velocity vector is not of right size");
     
     typedef ModelTpl<Scalar,Options,JointCollectionTpl> Model;
     typedef typename Model::JointIndex JointIndex;
@@ -342,7 +342,7 @@ namespace pinocchio
                             const Eigen::MatrixBase<ConfigVectorType> & q)
   {
     assert(model.check(data) && "data is not consistent with model.");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(q.size() == model.nq, "The configuration vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(q.size(), model.nq, "The configuration vector is not of right size");
     
     typedef ModelTpl<Scalar,Options,JointCollectionTpl> Model;
     typedef typename Model::JointIndex JointIndex;
@@ -374,8 +374,8 @@ namespace pinocchio
                                  const container::aligned_vector< ForceTpl<Scalar,Options> > & fext)
   {
     assert(model.check(data) && "data is not consistent with model.");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(q.size() == model.nq, "The configuration vector is not of right size");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(fext.size() == (size_t)model.njoints, "The size of the external forces is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(q.size(), model.nq, "The configuration vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(fext.size(), (size_t)model.njoints, "The size of the external forces is not of right size");
     
     typedef ModelTpl<Scalar,Options,JointCollectionTpl> Model;
     typedef typename Model::JointIndex JointIndex;
@@ -473,8 +473,8 @@ namespace pinocchio
     {
       typedef typename Model::JointIndex JointIndex;
       
-      const JointIndex & i = jmodel.id();
-      const JointIndex & parent = model.parents[i];
+      const JointIndex i = jmodel.id();
+      const JointIndex parent = model.parents[i];
       typename Data::RowMatrix6 & M6tmpR = data.M6tmpR;
 
       typedef typename SizeDepType<JointModel::NV>::template ColsReturn<typename Data::Matrix6x>::Type ColsBlock;
@@ -521,8 +521,8 @@ namespace pinocchio
                         const Eigen::MatrixBase<TangentVectorType> & v)
   {
     assert(model.check(data) && "data is not consistent with model.");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(q.size() == model.nq);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(v.size() == model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(q.size(), model.nq);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(v.size(), model.nv);
     
     typedef ModelTpl<Scalar,Options,JointCollectionTpl> Model;
     typedef typename Model::JointIndex JointIndex;
@@ -543,9 +543,84 @@ namespace pinocchio
     
     return data.C;
   }
+
+  template<typename Scalar, int Options, template<typename,int> class JointCollectionTpl>
+  struct GetCoriolisMatrixBackwardStep
+  : public fusion::JointUnaryVisitorBase< GetCoriolisMatrixBackwardStep<Scalar,Options,JointCollectionTpl> >
+  {
+    typedef ModelTpl<Scalar,Options,JointCollectionTpl> Model;
+    typedef DataTpl<Scalar,Options,JointCollectionTpl> Data;
+    
+    typedef boost::fusion::vector<const Model &,
+                                  Data &
+                                  > ArgsType;
+
+    template<typename JointModel>
+    static void algo(const JointModelBase<JointModel> & jmodel,
+                     const Model & model,
+                     Data & data)
+    {
+      typedef typename Model::JointIndex JointIndex;
+      typedef CoriolisMatrixBackwardStep<Scalar,Options,JointCollectionTpl> EquivalentPass;
+      
+      const JointIndex i = jmodel.id();
+      const JointIndex parent = model.parents[i];
+      typename Data::RowMatrix6 & M6tmpR = data.M6tmpR;
+
+      typedef typename SizeDepType<JointModel::NV>::template ColsReturn<typename Data::Matrix6x>::Type ColsBlock;
+      ColsBlock dJ_cols = jmodel.jointCols(data.dJ);
+      ColsBlock J_cols = jmodel.jointCols(data.J);
+      typename Data::Matrix6x & dFdv = data.Fcrb[0];
+      ColsBlock dFdv_cols = jmodel.jointCols(dFdv);
+      
+      motionSet::inertiaAction(data.oYcrb[i],dJ_cols,dFdv_cols);
+      dFdv_cols.noalias() += data.vxI[i] * J_cols;
+
+      data.C.block(jmodel.idx_v(),jmodel.idx_v(),jmodel.nv(),data.nvSubtree[i]).noalias()
+      = J_cols.transpose() * dFdv.middleCols(jmodel.idx_v(),data.nvSubtree[i]);
+      
+      EquivalentPass::lhsInertiaMult(data.oYcrb[i],J_cols.transpose(),M6tmpR.topRows(jmodel.nv()));
+      for(int j = data.parents_fromRow[(JointIndex)jmodel.idx_v()];j >= 0; j = data.parents_fromRow[(JointIndex)j])
+        data.C.middleRows(jmodel.idx_v(),jmodel.nv()).col(j).noalias() = M6tmpR.topRows(jmodel.nv()) * data.dJ.col(j);
+
+      M6tmpR.topRows(jmodel.nv()).noalias() = J_cols.transpose() * data.vxI[i];
+      for(int j = data.parents_fromRow[(JointIndex)jmodel.idx_v()];j >= 0; j = data.parents_fromRow[(JointIndex)j])
+        data.C.middleRows(jmodel.idx_v(),jmodel.nv()).col(j).noalias() += M6tmpR.topRows(jmodel.nv()) * data.J.col(j);
+      
+      if(parent>0)
+      {
+        data.vxI[parent] += data.vxI[i];
+      }
+      
+    }
+  };
+
+  template<typename Scalar, int Options, template<typename,int> class JointCollectionTpl>
+  inline const typename DataTpl<Scalar,Options,JointCollectionTpl>::MatrixXs &
+  getCoriolisMatrix(const ModelTpl<Scalar,Options,JointCollectionTpl> & model,
+                    DataTpl<Scalar,Options,JointCollectionTpl> & data)
+  {
+    assert(model.check(data) && "data is not consistent with model.");
+    
+    typedef ModelTpl<Scalar,Options,JointCollectionTpl> Model;
+    typedef typename Model::JointIndex JointIndex;
+    
+    for(JointIndex i=1; i<(JointIndex)model.njoints; ++i)
+    {
+      Inertia::vxi(data.ov[i],data.oinertias[i],data.vxI[i]);
+    }
+    
+    typedef GetCoriolisMatrixBackwardStep<Scalar,Options,JointCollectionTpl> Pass2;
+    for(JointIndex i=(JointIndex)(model.njoints-1); i>0; --i)
+    {
+      Pass2::run(model.joints[i],typename Pass2::ArgsType(model,data));
+    }
+    
+    return data.C;
+  }
   
 } // namespace pinocchio
 
 /// @endcond
 
-#endif // ifndef __pinocchio_rnea_hxx__
+#endif // ifndef __pinocchio_algorithm_rnea_hxx__

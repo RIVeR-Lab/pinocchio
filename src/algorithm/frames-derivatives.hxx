@@ -15,7 +15,7 @@ namespace pinocchio
   void
   getFrameVelocityDerivatives(const ModelTpl<Scalar,Options,JointCollectionTpl> & model,
                               DataTpl<Scalar,Options,JointCollectionTpl> & data,
-                              const typename ModelTpl<Scalar,Options,JointCollectionTpl>::FrameIndex frame_id,
+                              const FrameIndex frame_id,
                               const ReferenceFrame rf,
                               const Eigen::MatrixBase<Matrix6xOut1> & v_partial_dq,
                               const Eigen::MatrixBase<Matrix6xOut2> & v_partial_dv)
@@ -28,8 +28,8 @@ namespace pinocchio
     EIGEN_STATIC_ASSERT_SAME_MATRIX_SIZE(Matrix6xOut1,Matrix6x);
     EIGEN_STATIC_ASSERT_SAME_MATRIX_SIZE(Matrix6xOut2,Matrix6x);
     
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(v_partial_dq.cols() ==  model.nv);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(v_partial_dv.cols() ==  model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(v_partial_dq.cols(),  model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(v_partial_dv.cols(),  model.nv);
     assert(model.check(data) && "data is not consistent with model.");
     
     PINOCCHIO_CHECK_INPUT_ARGUMENT(frame_id <= model.frames.size(),"frame_id is larger than the number of frames");
@@ -53,7 +53,7 @@ namespace pinocchio
     typedef MotionRef<ColsBlockOut2> MotionOut2;
 
     Motion v_tmp;
-    const typename SE3::Vector3 trans = data.oMi[joint_id].rotation() * frame.placement.translation();
+    const typename Data::SE3::Vector3 trans = data.oMi[joint_id].rotation() * frame.placement.translation();
     const int colRef = nv(model.joints[joint_id])+idx_v(model.joints[joint_id])-1;
     switch (rf)
     {
@@ -91,7 +91,7 @@ namespace pinocchio
   void
   getFrameAccelerationDerivatives(const ModelTpl<Scalar,Options,JointCollectionTpl> & model,
                                   DataTpl<Scalar,Options,JointCollectionTpl> & data,
-                                  const typename ModelTpl<Scalar,Options,JointCollectionTpl>::FrameIndex frame_id,
+                                  const FrameIndex frame_id,
                                   const ReferenceFrame rf,
                                   const Eigen::MatrixBase<Matrix6xOut1> & v_partial_dq,
                                   const Eigen::MatrixBase<Matrix6xOut2> & a_partial_dq,
@@ -108,10 +108,10 @@ namespace pinocchio
     EIGEN_STATIC_ASSERT_SAME_MATRIX_SIZE(Matrix6xOut3,Matrix6x);
     EIGEN_STATIC_ASSERT_SAME_MATRIX_SIZE(Matrix6xOut4,Matrix6x);
 
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(v_partial_dq.cols() ==  model.nv);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(a_partial_dq.cols() ==  model.nv);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(a_partial_dv.cols() ==  model.nv);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(a_partial_da.cols() ==  model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(v_partial_dq.cols(), model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(a_partial_dq.cols(), model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(a_partial_dv.cols(), model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(a_partial_da.cols(), model.nv);
     assert(model.check(data) && "data is not consistent with model.");
     
     PINOCCHIO_CHECK_INPUT_ARGUMENT(frame_id <= model.frames.size(),"frame_id is larger than the number of frames");
@@ -142,7 +142,7 @@ namespace pinocchio
     typedef MotionRef<ColsBlockOut4> MotionOut4;
 
     Motion v_tmp;
-    const typename SE3::Vector3 trans = data.oMi[joint_id].rotation() * frame.placement.translation();
+    const typename Data::SE3::Vector3 trans = data.oMi[joint_id].rotation() * frame.placement.translation();
     const int colRef = nv(model.joints[joint_id])+idx_v(model.joints[joint_id])-1;
     switch (rf)
     {
@@ -184,15 +184,15 @@ namespace pinocchio
   }
 
   template<typename Scalar, int Options, template<typename,int> class JointCollectionTpl, typename Matrix6xOut1, typename Matrix6xOut2, typename Matrix6xOut3, typename Matrix6xOut4, typename Matrix6xOut5>
-  inline void getFrameAccelerationDerivatives(const ModelTpl<Scalar,Options,JointCollectionTpl> & model,
-                                              DataTpl<Scalar,Options,JointCollectionTpl> & data,
-                                              const Model::FrameIndex frame_id,
-                                              const ReferenceFrame rf,
-                                              const Eigen::MatrixBase<Matrix6xOut1> & v_partial_dq,
-                                              const Eigen::MatrixBase<Matrix6xOut2> & v_partial_dv,
-                                              const Eigen::MatrixBase<Matrix6xOut3> & a_partial_dq,
-                                              const Eigen::MatrixBase<Matrix6xOut4> & a_partial_dv,
-                                              const Eigen::MatrixBase<Matrix6xOut5> & a_partial_da)
+  void getFrameAccelerationDerivatives(const ModelTpl<Scalar,Options,JointCollectionTpl> & model,
+                                       DataTpl<Scalar,Options,JointCollectionTpl> & data,
+                                       const FrameIndex frame_id,
+                                       const ReferenceFrame rf,
+                                       const Eigen::MatrixBase<Matrix6xOut1> & v_partial_dq,
+                                       const Eigen::MatrixBase<Matrix6xOut2> & v_partial_dv,
+                                       const Eigen::MatrixBase<Matrix6xOut3> & a_partial_dq,
+                                       const Eigen::MatrixBase<Matrix6xOut4> & a_partial_dv,
+                                       const Eigen::MatrixBase<Matrix6xOut5> & a_partial_da)
   {
     getFrameAccelerationDerivatives(model,data,
                                     frame_id,rf,

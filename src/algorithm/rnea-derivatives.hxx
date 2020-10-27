@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2017-2019 CNRS INRIA
+// Copyright (c) 2017-2020 CNRS INRIA
 //
 
 #ifndef __pinocchio_rnea_derivatives_hxx__
@@ -46,7 +46,7 @@ namespace pinocchio
       else
         data.oMi[i] = data.liMi[i];
       
-      data.oYcrb[i] = data.oMi[i].act(model.inertias[i]);
+      data.oYcrb[i] = data.oinertias[i] = data.oMi[i].act(model.inertias[i]);
       data.of[i] = data.oYcrb[i] * minus_gravity;
       
       typedef typename SizeDepType<JointModel::NV>::template ColsReturn<typename Data::Matrix6x>::Type ColsBlock;
@@ -128,9 +128,9 @@ namespace pinocchio
                                        const Eigen::MatrixBase<ConfigVectorType> & q,
                                        const Eigen::MatrixBase<ReturnMatrixType> & gravity_partial_dq)
   {
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(q.size() == model.nq, "The configuration vector is not of right size");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(gravity_partial_dq.cols() == model.nv);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(gravity_partial_dq.rows() == model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(q.size(), model.nq, "The configuration vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(gravity_partial_dq.cols(), model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(gravity_partial_dq.rows(), model.nv);
     assert(model.check(data) && "data is not consistent with model.");
     
     typedef ModelTpl<Scalar,Options,JointCollectionTpl> Model;
@@ -162,10 +162,10 @@ namespace pinocchio
                                  const container::aligned_vector< ForceTpl<Scalar,Options> > & fext,
                                  const Eigen::MatrixBase<ReturnMatrixType> & static_torque_partial_dq)
   {
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(q.size() == model.nq, "The configuration vector is not of right size");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(static_torque_partial_dq.cols() == model.nv);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(static_torque_partial_dq.rows() == model.nv);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(fext.size() == (size_t)model.njoints, "The size of the external forces is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(q.size(), model.nq, "The configuration vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(static_torque_partial_dq.cols(), model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(static_torque_partial_dq.rows(), model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(fext.size(), (size_t)model.njoints, "The size of the external forces is not of right size");
     assert(model.check(data) && "data is not consistent with model.");
     
     typedef ModelTpl<Scalar,Options,JointCollectionTpl> Model;
@@ -242,7 +242,7 @@ namespace pinocchio
         data.a[i] += data.liMi[i].actInv(data.a[parent]);
       }
       
-      data.oYcrb[i] = data.oMi[i].act(model.inertias[i]);
+      data.oYcrb[i] = data.oinertias[i] = data.oMi[i].act(model.inertias[i]);
       ov = data.oMi[i].act(data.v[i]);
       oa = data.oMi[i].act(data.a[i]);
       oa_gf = oa - model.gravity; // add gravity contribution
@@ -388,7 +388,8 @@ namespace pinocchio
       }
       
       // Restore the status of dAdq_cols (remove gravity)
-      PINOCCHIO_CHECK_INPUT_ARGUMENT(model.gravity.angular().isZero(), "The gravity must be a pure force vector, no angular part");
+      PINOCCHIO_CHECK_INPUT_ARGUMENT(isZero(model.gravity.angular()),
+                                     "The gravity must be a pure force vector, no angular part");
       for(Eigen::DenseIndex k =0; k < jmodel.nv(); ++k)
       {
         MotionRef<typename ColsBlock::ColXpr> m_in(J_cols.col(k));
@@ -419,15 +420,15 @@ namespace pinocchio
                          const Eigen::MatrixBase<MatrixType2> & rnea_partial_dv,
                          const Eigen::MatrixBase<MatrixType3> & rnea_partial_da)
   {
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(q.size() == model.nq, "The joint configuration vector is not of right size");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(v.size() == model.nv, "The joint velocity vector is not of right size");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(a.size() == model.nv, "The joint acceleration vector is not of right size");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(rnea_partial_dq.cols() == model.nv);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(rnea_partial_dq.rows() == model.nv);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(rnea_partial_dv.cols() == model.nv);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(rnea_partial_dv.rows() == model.nv);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(rnea_partial_da.cols() == model.nv);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(rnea_partial_da.rows() == model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(q.size(), model.nq, "The joint configuration vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(v.size(), model.nv, "The joint velocity vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(a.size(), model.nv, "The joint acceleration vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(rnea_partial_dq.cols(), model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(rnea_partial_dq.rows(), model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(rnea_partial_dv.cols(), model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(rnea_partial_dv.rows(), model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(rnea_partial_da.cols(), model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(rnea_partial_da.rows(), model.nv);
     assert(model.check(data) && "data is not consistent with model.");
     
     typedef ModelTpl<Scalar,Options,JointCollectionTpl> Model;
@@ -466,16 +467,16 @@ namespace pinocchio
                          const Eigen::MatrixBase<MatrixType2> & rnea_partial_dv,
                          const Eigen::MatrixBase<MatrixType3> & rnea_partial_da)
   {
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(q.size() == model.nq, "The joint configuration vector is not of right size");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(v.size() == model.nv, "The joint velocity vector is not of right size");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(a.size() == model.nv, "The joint acceleration vector is not of right size");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(fext.size() == (size_t)model.njoints, "The size of the external forces is not of right size");
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(rnea_partial_dq.cols() == model.nv);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(rnea_partial_dq.rows() == model.nv);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(rnea_partial_dv.cols() == model.nv);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(rnea_partial_dv.rows() == model.nv);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(rnea_partial_da.cols() == model.nv);
-    PINOCCHIO_CHECK_INPUT_ARGUMENT(rnea_partial_da.rows() == model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(q.size(), model.nq, "The joint configuration vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(v.size(), model.nv, "The joint velocity vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(a.size(), model.nv, "The joint acceleration vector is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(fext.size(), (size_t)model.njoints, "The size of the external forces is not of right size");
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(rnea_partial_dq.cols(), model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(rnea_partial_dq.rows(), model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(rnea_partial_dv.cols(), model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(rnea_partial_dv.rows(), model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(rnea_partial_da.cols(), model.nv);
+    PINOCCHIO_CHECK_ARGUMENT_SIZE(rnea_partial_da.rows(), model.nv);
     assert(model.check(data) && "data is not consistent with model.");
     
     typedef ModelTpl<Scalar,Options,JointCollectionTpl> Model;

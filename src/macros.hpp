@@ -1,20 +1,23 @@
 //
-// Copyright (c) 2017-2019 CNRS INRIA
+// Copyright (c) 2017-2020 CNRS INRIA
 //
 
 #ifndef __pinocchio_macros_hpp__
 #define __pinocchio_macros_hpp__
 
-#if __cplusplus >= 201103L
-  #define PINOCCHIO_WITH_CXX11_SUPPORT
+// On Windows, __cplusplus is not necessarily set to the C++ version being used.
+// See https://docs.microsoft.com/fr-fr/cpp/build/reference/zc-cplusplus?view=vs-2019 for further information.
+
+#if (__cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703))
+  #define PINOCCHIO_WITH_CXX17_SUPPORT
 #endif
 
-#if __cplusplus >= 201403L
+#if (__cplusplus >= 201403L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201403))
   #define PINOCCHIO_WITH_CXX14_SUPPORT
 #endif
 
-#if __cplusplus >= 201703L
-  #define PINOCCHIO_WITH_CXX17_SUPPORT
+#if (__cplusplus >= 201103L || (defined(_MSC_VER) && _MSC_VER >= 1600))
+  #define PINOCCHIO_WITH_CXX11_SUPPORT
 #endif
 
 #define PINOCCHIO_STRING_LITERAL(string) #string
@@ -108,6 +111,33 @@ namespace pinocchio
 #define PINOCCHIO_CHECK_INPUT_ARGUMENT(...) \
   _PINOCCHIO_GET_OVERRIDE_FOR_CHECK_INPUT_ARGUMENT(__VA_ARGS__,_PINOCCHIO_CHECK_INPUT_ARGUMENT_2,\
   _PINOCCHIO_CHECK_INPUT_ARGUMENT_1,_PINOCCHIO_CHECK_INPUT_ARGUMENT_0)(__VA_ARGS__)
+
+#define _PINOCCHIO_GET_OVERRIDE_FOR_CHECK_ARGUMENT_SIZE(_1, _2, _3, MACRO_NAME, ...) MACRO_NAME
+
+#define _PINOCCHIO_CHECK_ARGUMENT_SIZE_5(size, expected_size, size_literal, expected_size_literal, message) \
+  if (size != expected_size) { \
+    std::ostringstream oss; \
+    oss << "wrong argument size: expected " << expected_size << ", got " << size << std::endl; \
+    oss << "hint: "; \
+    if(!std::string(message).empty()) \
+      oss << message << std::endl; \
+    else \
+      oss << size_literal << " is different from " << expected_size_literal << std::endl; \
+    PINOCCHIO_THROW(true, std::invalid_argument, oss.str()); \
+  }
+
+#define _PINOCCHIO_CHECK_ARGUMENT_SIZE_3(size, expected_size, message) \
+  _PINOCCHIO_CHECK_ARGUMENT_SIZE_5(size, expected_size, PINOCCHIO_STRING_LITERAL(size), PINOCCHIO_STRING_LITERAL(expected_size), PINOCCHIO_STRING_LITERAL(message))
+
+#define _PINOCCHIO_CHECK_ARGUMENT_SIZE_2(size, expected_size) \
+  _PINOCCHIO_CHECK_ARGUMENT_SIZE_5(size, expected_size, PINOCCHIO_STRING_LITERAL(size), PINOCCHIO_STRING_LITERAL(expected_size), "")
+
+#define _PINOCCHIO_CHECK_ARGUMENT_SIZE_1
+
+/// \brief Macro to check if the size of an element is equal to the expected size.
+#define PINOCCHIO_CHECK_ARGUMENT_SIZE(...) \
+  _PINOCCHIO_GET_OVERRIDE_FOR_CHECK_ARGUMENT_SIZE(__VA_ARGS__,_PINOCCHIO_CHECK_ARGUMENT_SIZE_3, \
+  _PINOCCHIO_CHECK_ARGUMENT_SIZE_2, _PINOCCHIO_CHECK_ARGUMENT_SIZE_1)(__VA_ARGS__)
 
 #if defined(__GNUC__) || defined(__clang__)
   #pragma GCC diagnostic pop

@@ -3,13 +3,14 @@
 // Copyright (c) 2015 Wandercraft, 86 rue de Paris 91400 Orsay, France.
 //
 
-#ifndef __pinocchio_python_model_hpp__
-#define __pinocchio_python_model_hpp__
+#ifndef __pinocchio_python_multibody_model_hpp__
+#define __pinocchio_python_multibody_model_hpp__
+
+#include <eigenpy/eigen-to-python.hpp>
 
 #include "pinocchio/multibody/model.hpp"
 #include "pinocchio/serialization/model.hpp"
 
-#include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/python/overloads.hpp>
 #include <eigenpy/memory.hpp>
 #include <eigenpy/exception.hpp>
@@ -18,6 +19,7 @@
 #include "pinocchio/bindings/python/serialization/serializable.hpp"
 #include "pinocchio/bindings/python/utils/printable.hpp"
 #include "pinocchio/bindings/python/utils/copyable.hpp"
+#include "pinocchio/bindings/python/utils/std-map.hpp"
 #include "pinocchio/bindings/python/utils/pickle-map.hpp"
 #include "pinocchio/bindings/python/utils/std-vector.hpp"
 
@@ -95,7 +97,7 @@ namespace pinocchio
       
     protected:
       
-      struct addJointVisitor
+      struct addJointVisitor0
       : public boost::static_visitor<Index>
       {
         Model & m_model;
@@ -103,10 +105,10 @@ namespace pinocchio
         const SE3 & m_joint_placement;
         const std::string & m_joint_name;
 
-        addJointVisitor(Model & model,
-                        const JointIndex parent_id,
-                        const SE3 & joint_placement,
-                        const std::string & joint_name)
+        addJointVisitor0(Model & model,
+                         const JointIndex parent_id,
+                         const SE3 & joint_placement,
+                         const std::string & joint_name)
         : m_model(model)
         , m_parent_id(parent_id)
         , m_joint_placement(joint_placement)
@@ -118,21 +120,22 @@ namespace pinocchio
         {
           return m_model.addJoint(m_parent_id,jmodel,m_joint_placement,m_joint_name);
         }
-      }; // struct addJointVisitor
+      }; // struct addJointVisitor0
 
-      struct addJointWithLimitsVisitor
-      : public boost::static_visitor<Index>
+      struct addJointVisitor1
+      : public addJointVisitor0
       {
-        Model & m_model;
-        const JointIndex m_parent_id;
-        const SE3 & m_joint_placement;
-        const std::string & m_joint_name;
+        using addJointVisitor0::m_model;
+        using addJointVisitor0::m_parent_id;
+        using addJointVisitor0::m_joint_placement;
+        using addJointVisitor0::m_joint_name;
+        
         const VectorXs & m_max_effort;
         const VectorXs & m_max_velocity;
         const VectorXs & m_min_config;
         const VectorXs & m_max_config;
 
-        addJointWithLimitsVisitor(Model & model,
+        addJointVisitor1(Model & model,
                                   const JointIndex parent_id,
                                   const SE3 & joint_placement,
                                   const std::string & joint_name,
@@ -140,10 +143,7 @@ namespace pinocchio
                                   const VectorXs & max_velocity,
                                   const VectorXs & min_config,
                                   const VectorXs & max_config)
-        : m_model(model)
-        , m_parent_id(parent_id)
-        , m_joint_placement(joint_placement)
-        , m_joint_name(joint_name)
+        : addJointVisitor0(model,parent_id,joint_placement,joint_name)
         , m_max_effort(max_effort)
         , m_max_velocity(max_velocity)
         , m_min_config(min_config)
@@ -155,7 +155,45 @@ namespace pinocchio
         {
           return m_model.addJoint(m_parent_id,jmodel,m_joint_placement,m_joint_name,m_max_effort,m_max_velocity,m_min_config,m_max_config);
         }
-      }; // struct addJointWithLimitsVisitor
+      }; // struct addJointVisitor1
+      
+      struct addJointVisitor2
+      : public addJointVisitor1
+      {
+        using addJointVisitor1::m_model;
+        using addJointVisitor1::m_parent_id;
+        using addJointVisitor1::m_joint_placement;
+        using addJointVisitor1::m_joint_name;
+        using addJointVisitor1::m_max_effort;
+        using addJointVisitor1::m_max_velocity;
+        using addJointVisitor1::m_min_config;
+        using addJointVisitor1::m_max_config;
+        
+        const VectorXs & m_friction;
+        const VectorXs & m_damping;
+
+        addJointVisitor2(Model & model,
+                         const JointIndex parent_id,
+                         const SE3 & joint_placement,
+                         const std::string & joint_name,
+                         const VectorXs & max_effort,
+                         const VectorXs & max_velocity,
+                         const VectorXs & min_config,
+                         const VectorXs & max_config,
+                         const VectorXs & friction,
+                         const VectorXs & damping)
+        : addJointVisitor1(model,parent_id,joint_placement,joint_name,
+                           max_effort,max_velocity,min_config,max_config)
+        , m_friction(friction)
+        , m_damping(damping)
+        {}
+
+        template <typename JointModelDerived>
+        JointIndex operator()(JointModelDerived & jmodel) const
+        {
+          return m_model.addJoint(m_parent_id,jmodel,m_joint_placement,m_joint_name,m_max_effort,m_max_velocity,m_min_config,m_max_config,m_friction,m_damping);
+        }
+      }; // struct addJointVisitor1
       
     public:
 
@@ -164,7 +202,8 @@ namespace pinocchio
       void visit(PyClass& cl) const
       {
         cl
-        .def(bp::init<>(bp::arg("self"),"Default constructor. Constructs an empty model."))
+        .def(bp::init<>(bp::arg("self"),
+                        "Default constructor. Constructs an empty model."))
         
         // Class Members
         .add_property("nq", &Model::nq)
@@ -175,36 +214,34 @@ namespace pinocchio
         .add_property("inertias",&Model::inertias)
         .add_property("jointPlacements",&Model::jointPlacements)
         .add_property("joints",&Model::joints)
+        .add_property("idx_qs",&Model::idx_qs)
+        .add_property("nqs",&Model::nqs)
+        .add_property("idx_vs",&Model::idx_vs)
+        .add_property("nvs",&Model::nvs)          
         .add_property("parents",&Model::parents)
         .add_property("names",&Model::names)
         .add_property("name",&Model::name)
         .add_property("referenceConfigurations", &Model::referenceConfigurations)
-        .add_property("rotorInertia",
-                      make_getter(&Model::rotorInertia, bp::return_value_policy<bp::return_by_value>()),
-                      make_setter(&Model::rotorInertia, bp::return_value_policy<bp::return_by_value>()),
-                      "Vector of rotor inertia parameters.")
-        .add_property("rotorGearRatio",
-                      make_getter(&Model::rotorGearRatio, bp::return_value_policy<bp::return_by_value>()),
-                      make_setter(&Model::rotorGearRatio, bp::return_value_policy<bp::return_by_value>()),
-                      "Vector of rotor gear ratio parameters.")
-        .add_property("effortLimit",
-                      make_getter(&Model::effortLimit, bp::return_value_policy<bp::return_by_value>()),
-                      make_setter(&Model::effortLimit, bp::return_value_policy<bp::return_by_value>()),
-                      "Joint max effort.")
-        .add_property("velocityLimit",
-                      make_getter(&Model::velocityLimit, bp::return_value_policy<bp::return_by_value>()),
-                      make_setter(&Model::velocityLimit, bp::return_value_policy<bp::return_by_value>()),
-                      "Joint max velocity.")
-        .add_property("lowerPositionLimit",
-                      make_getter(&Model::lowerPositionLimit, bp::return_value_policy<bp::return_by_value>()),
-                      make_setter(&Model::lowerPositionLimit, bp::return_value_policy<bp::return_by_value>()),
-                      "Limit for joint lower position.")
-        .add_property("upperPositionLimit",
-                      make_getter(&Model::upperPositionLimit, bp::return_value_policy<bp::return_by_value>()),
-                      make_setter(&Model::upperPositionLimit, bp::return_value_policy<bp::return_by_value>()),
-                      "Limit for joint upper position.")
         
-        .def_readwrite("frames",&Model::frames,"Vector of frames contained in the model.")
+        .def_readwrite("rotorInertia",&Model::rotorInertia,
+                       "Vector of rotor inertia parameters.")
+        .def_readwrite("rotorGearRatio",&Model::rotorGearRatio,
+                       "Vector of rotor gear ratio parameters.")
+        .def_readwrite("friction",&Model::friction,
+                       "Vector of joint friction parameters.")
+        .def_readwrite("damping",&Model::damping,
+                       "Vector of joint damping parameters.")
+        .def_readwrite("effortLimit",&Model::effortLimit,
+                       "Joint max effort.")
+        .def_readwrite("velocityLimit",&Model::velocityLimit,
+                       "Joint max velocity.")
+        .def_readwrite("lowerPositionLimit",&Model::lowerPositionLimit,
+                       "Limit for joint lower position.")
+        .def_readwrite("upperPositionLimit",&Model::upperPositionLimit,
+                       "Limit for joint upper position.")
+        
+        .def_readwrite("frames",&Model::frames,
+                       "Vector of frames contained in the model.")
         
         .def_readwrite("supports",
                        &Model::supports,
@@ -215,69 +252,95 @@ namespace pinocchio
                        &Model::subtrees,
                        "Vector of subtrees. subtree[j] corresponds to the subtree supported by the joint j.")
         
-        .def_readwrite("gravity",&Model::gravity,"Motion vector corresponding to the gravity field expressed in the world Frame.")
+        .def_readwrite("gravity",&Model::gravity,
+                       "Motion vector corresponding to the gravity field expressed in the world Frame.")
         
         // Class Methods
-        .def("addJoint",&ModelPythonVisitor::addJoint,
-             bp::args("parent_id","joint_model","joint_placement","joint_name"),
+        .def("addJoint",&ModelPythonVisitor::addJoint0,
+             bp::args("self","parent_id","joint_model","joint_placement","joint_name"),
              "Adds a joint to the kinematic tree. The joint is defined by its placement relative to its parent joint and its name.")
-        .def("addJoint",&ModelPythonVisitor::addJointWithLimits,
-             bp::args("parent_id","joint_model","joint_placement","joint_name",
+        .def("addJoint",&ModelPythonVisitor::addJoint1,
+             bp::args("self","parent_id","joint_model","joint_placement","joint_name",
                       "max_effort","max_velocity","min_config","max_config"),
-             "Adds a joint to the kinematic tree with given bounds. The joint is defined by its placement relative to its parent joint and its name.")
+             "Adds a joint to the kinematic tree with given bounds. The joint is defined by its placement relative to its parent joint and its name."
+             "This signature also takes as input effort, velocity limits as well as the bounds on the joint configuration.")
+        .def("addJoint",&ModelPythonVisitor::addJoint2,
+             bp::args("self","parent_id","joint_model","joint_placement","joint_name",
+                      "max_effort","max_velocity","min_config","max_config",
+                      "friction","damping"),
+             "Adds a joint to the kinematic tree with given bounds. The joint is defined by its placement relative to its parent joint and its name.\n"
+             "This signature also takes as input effort, velocity limits as well as the bounds on the joint configuration.\n"
+             "The user should also provide the friction and damping related to the joint.")
         .def("addJointFrame", &Model::addJointFrame,
-             addJointFrame_overload(bp::args("joint_id", "frame_id"),
+             addJointFrame_overload(bp::args("self","joint_id", "frame_id"),
                                     "Add the joint provided by its joint_id as a frame to the frame tree.\n"
                                     "The frame_id may be optionally provided."))
         .def("appendBodyToJoint",&Model::appendBodyToJoint,
-             bp::args("joint_id","body_inertia","body_placement"),
+             bp::args("self","joint_id","body_inertia","body_placement"),
              "Appends a body to the joint given by its index. The body is defined by its inertia, its relative placement regarding to the joint and its name.")
         
-        .def("addBodyFrame", &Model::addBodyFrame, bp::args("body_name", "parentJoint", "body_placement", "previous_frame(parent frame)"), "add a body to the frame tree")
-        .def("getBodyId",&Model::getBodyId, bp::args("name"), "Return the index of a frame of type BODY given by its name")
-        .def("existBodyName", &Model::existBodyName, bp::args("name"), "Check if a frame of type BODY exists, given its name")
-        .def("getJointId",&Model::getJointId, bp::args("name"), "Return the index of a joint given by its name")
-        .def("existJointName", &Model::existJointName, bp::args("name"), "Check if a joint given by its name exists")
+        .def("addBodyFrame", &Model::addBodyFrame, bp::args("self","body_name", "parentJoint", "body_placement", "previous_frame(parent frame)"), "add a body to the frame tree")
+        .def("getBodyId",&Model::getBodyId, bp::args("self","name"), "Return the index of a frame of type BODY given by its name")
+        .def("existBodyName", &Model::existBodyName, bp::args("self","name"), "Check if a frame of type BODY exists, given its name")
+        .def("getJointId",&Model::getJointId, bp::args("self","name"), "Return the index of a joint given by its name")
+        .def("existJointName", &Model::existJointName, bp::args("self","name"), "Check if a joint given by its name exists")
         
-        .def("getFrameId",&Model::getFrameId,getFrameId_overload(bp::args("name","type"),"Returns the index of the frame given by its name and its type. If the frame is not in the frames vector, it returns the current size of the frames vector."))
+        .def("getFrameId",&Model::getFrameId,getFrameId_overload(bp::args("self","name","type"),"Returns the index of the frame given by its name and its type. If the frame is not in the frames vector, it returns the current size of the frames vector."))
         
-        .def("existFrame",&Model::existFrame,existFrame_overload(bp::args("name","type"),"Returns true if the frame given by its name exists inside the Model with the given type."))
+        .def("existFrame",&Model::existFrame,existFrame_overload(bp::args("self","name","type"),"Returns true if the frame given by its name exists inside the Model with the given type."))
         
-        .def("addFrame",(std::size_t (Model::*)(const Frame &)) &Model::addFrame,bp::args("frame"),"Add a frame to the vector of frames.")
+        .def("addFrame",(std::size_t (Model::*)(const Frame &)) &Model::addFrame,bp::args("self","frame"),"Add a frame to the vector of frames.")
         
         .def("createData",
-             &ModelPythonVisitor::createData,
+             &ModelPythonVisitor::createData,bp::arg("self"),
              "Create a Data object for the given model.")
         
-        .def("check",(bool (Model::*)(const Data &) const) &Model::check,bp::arg("data"),"Check consistency of data wrt model.")
+        .def("check",(bool (Model::*)(const Data &) const) &Model::check,bp::args("self","data"),
+             "Check consistency of data wrt model.")
         
         .def(bp::self == bp::self)
         .def(bp::self != bp::self)
         ;
       }
 
-      static JointIndex addJoint(Model & model,
-                                 JointIndex parent_id,
-                                 bp::object jmodel,
-                                 const SE3 & joint_placement,
-                                 const std::string & joint_name)
+      static JointIndex addJoint0(Model & model,
+                                  JointIndex parent_id,
+                                  bp::object jmodel,
+                                  const SE3 & joint_placement,
+                                  const std::string & joint_name)
       {
         JointModelVariant jmodel_variant = bp::extract<JointModelVariant> (jmodel)();
-        return boost::apply_visitor(addJointVisitor(model,parent_id,joint_placement,joint_name), jmodel_variant);
+        return boost::apply_visitor(addJointVisitor0(model,parent_id,joint_placement,joint_name), jmodel_variant);
       }
 
-      static JointIndex addJointWithLimits(Model & model,
-                                           JointIndex parent_id,
-                                           bp::object jmodel,
-                                           const SE3 & joint_placement,
-                                           const std::string & joint_name,
-                                           const VectorXs & max_effort,
-                                           const VectorXs & max_velocity,
-                                           const VectorXs & min_config,
-                                           const VectorXs & max_config)
+      static JointIndex addJoint1(Model & model,
+                                  JointIndex parent_id,
+                                  bp::object jmodel,
+                                  const SE3 & joint_placement,
+                                  const std::string & joint_name,
+                                  const VectorXs & max_effort,
+                                  const VectorXs & max_velocity,
+                                  const VectorXs & min_config,
+                                  const VectorXs & max_config)
       {
         JointModelVariant jmodel_variant = bp::extract<JointModelVariant> (jmodel)();
-        return boost::apply_visitor(addJointWithLimitsVisitor(model,parent_id,joint_placement,joint_name,max_effort,max_velocity,min_config,max_config), jmodel_variant);
+        return boost::apply_visitor(addJointVisitor1(model,parent_id,joint_placement,joint_name,max_effort,max_velocity,min_config,max_config), jmodel_variant);
+      }
+      
+      static JointIndex addJoint2(Model & model,
+                                  JointIndex parent_id,
+                                  bp::object jmodel,
+                                  const SE3 & joint_placement,
+                                  const std::string & joint_name,
+                                  const VectorXs & max_effort,
+                                  const VectorXs & max_velocity,
+                                  const VectorXs & min_config,
+                                  const VectorXs & max_config,
+                                  const VectorXs & friction,
+                                  const VectorXs & damping)
+      {
+        JointModelVariant jmodel_variant = bp::extract<JointModelVariant> (jmodel)();
+        return boost::apply_visitor(addJointVisitor2(model,parent_id,joint_placement,joint_name,max_effort,max_velocity,min_config,max_config,friction,damping), jmodel_variant);
       }
 
       static Data createData(const Model & model) { return Data(model); }
@@ -310,14 +373,17 @@ namespace pinocchio
       /* --- Expose --------------------------------------------------------- */
       static void expose()
       {
+        typedef typename Model::ConfigVectorMap ConfigVectorMap;
+        typedef bp::map_indexing_suite<ConfigVectorMap,false> map_indexing_suite;
         StdVectorPythonVisitor<Index>::expose("StdVec_Index");
         StdVectorPythonVisitor<IndexVector>::expose("StdVec_IndexVector");
         StdVectorPythonVisitor<std::string>::expose("StdVec_StdString");
         StdVectorPythonVisitor<bool>::expose("StdVec_Bool");
-        StdVectorPythonVisitor<Scalar>::expose("StdVec_double");
-        bp::class_<typename Model::ConfigVectorMap>("StdMap_String_EigenVectorXd")
-          .def(bp::map_indexing_suite< typename Model::ConfigVectorMap, true >())
-          .def_pickle(PickleMap<typename Model::ConfigVectorMap>());
+        StdVectorPythonVisitor<Scalar>::expose("StdVec_Double");
+        bp::class_<typename Model::ConfigVectorMap>("StdMap_String_VectorXd")
+          .def(map_indexing_suite())
+          .def_pickle(PickleMap<typename Model::ConfigVectorMap>())
+          .def(details::overload_base_get_item_for_std_map<typename Model::ConfigVectorMap>());
 
         bp::class_<Model>("Model",
                           "Articulated Rigid Body model",
@@ -333,4 +399,4 @@ namespace pinocchio
     
   }} // namespace pinocchio::python
 
-#endif // ifndef __pinocchio_python_model_hpp__
+#endif // ifndef __pinocchio_python_multibody_model_hpp__
