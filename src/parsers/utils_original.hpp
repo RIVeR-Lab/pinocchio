@@ -61,6 +61,7 @@ namespace pinocchio
    inline std::string retrieveResourcePath(const std::string & string,
                                            const std::vector<std::string> & package_dirs)
    {
+
     namespace bf = boost::filesystem;
     std::string result_path;
 
@@ -71,13 +72,6 @@ namespace pinocchio
     {
       std::string scheme = string.substr(0, pos_separator);
       std::string path = string.substr(pos_separator+3, std::string::npos);
-      
-      // NUA EDIT:
-      const std::string separator2("/");
-      const std::size_t pos_separator2 = path.find(separator2);
-      std::string path_package = path.substr(pos_separator2+1);
-
-      //std::cout << "pinocchio::utils::retrieveResourcePath -> path_package: " << path_package << std::endl;
 
       if(scheme == "package")
       {
@@ -88,18 +82,9 @@ namespace pinocchio
         // concatenate package_path with filename
         for (std::size_t i = 0; i < package_dirs.size(); ++i)
         {
-          //std::cout << "pinocchio::utils::retrieveResourcePath -> package_dirs[i]: " << package_dirs[i] << std::endl;
-
-          // NUA EDIT: Not actively using but may improve efficiency!
-          const std::size_t pos_last_seperator2 = package_dirs[i].find_last_of(separator2);
-          std::string package_name = package_dirs[i].substr(pos_last_seperator2+1);
-
-          // NUA EDIT:
-          //if ( bf::exists( bf::path(package_dirs[i] + "/" + path)))
-          if ( bf::exists( bf::path(package_dirs[i] + "/" + path_package)))
+          if ( bf::exists( bf::path(package_dirs[i] + "/" + path)))
           {
-            //result_path = std::string( package_dirs[i] + "/" + path );
-            result_path = std::string( package_dirs[i] + "/" + path_package );
+            result_path = std::string( package_dirs[i] + "/" + path );
             break;
           }
         }
@@ -117,7 +102,7 @@ namespace pinocchio
     else // return the entry string
     {
       result_path = string;
-    }
+    } 
 
     return result_path;
    }
