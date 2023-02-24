@@ -283,6 +283,31 @@ namespace pinocchio
         }
       }
 
+      /// NUA EDIT
+      ///
+      /// \brief Parse a tree with a specific root joint linking the model to the environment.
+      ///        The function returns an exception as soon as a necessary Inertia or Joint information are missing.
+      ///
+      /// \param[in] link The current URDF link.
+      /// \param[in] model The model where the link must be added.
+      /// \param[in] transform_base_wrt_world The placement of the link.
+      ///
+      void parseRootTree(const ::urdf::ModelInterface * urdfTree,
+                         UrdfVisitorBase& model,
+                         pinocchio::SE3& transform_base_wrt_world)
+      {
+        model.setName(urdfTree->getName());
+
+        ::urdf::LinkConstSharedPtr root_link = urdfTree->getRoot();
+        model.addRootJoint(convertFromUrdf(root_link->inertial), root_link->name, transform_base_wrt_world);
+        //model.addRootJoint(convertFromUrdf(root_link->inertial), root_link->name);
+
+        BOOST_FOREACH(::urdf::LinkConstSharedPtr child, root_link->child_links)
+        {
+          parseTree(child, model);
+        }
+      }
+
       void parseRootTree(const std::string & filename,
                          UrdfVisitorBase& model)
       {

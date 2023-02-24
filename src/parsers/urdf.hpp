@@ -110,6 +110,16 @@ namespace pinocchio
                ModelTpl<Scalar,Options,JointCollectionTpl> & model,
                const bool verbose = false);
 
+    /// NUA EDIT
+    /// copydoc buildModel<Scalar,Options,JointCollectionTpl>(const boost::shared_ptr< ::urdf::ModelInterface>, const typename ModelTpl<Scalar,Options,JointCollectionTpl>::JointModel &, ModelTpl<Scalar,Options,JointCollectionTpl> &, const bool verbose)
+    template<typename Scalar, int Options, template<typename,int> class JointCollectionTpl>
+    ModelTpl<Scalar,Options,JointCollectionTpl> &
+    buildModel(const std::shared_ptr< ::urdf::ModelInterface> urdfTree,
+               const typename ModelTpl<Scalar,Options,JointCollectionTpl>::JointModel & rootJoint,
+               pinocchio::SE3& transform_base_wrt_world,
+               ModelTpl<Scalar,Options,JointCollectionTpl> & model,
+               const bool verbose = false);
+
     /// copydoc buildModel<Scalar,Options,JointCollectionTpl>(const boost::shared_ptr< ::urdf::ModelInterface>, ModelTpl<Scalar,Options,JointCollectionTpl> &, const bool verbose)
     template<typename Scalar, int Options, template<typename,int> class JointCollectionTpl>
     ModelTpl<Scalar,Options,JointCollectionTpl> &

@@ -42,6 +42,9 @@ namespace pinocchio
 
           virtual void addRootJoint (const Inertia& Y, const std::string & body_name) = 0;
 
+          // NUA EDIT
+          virtual void addRootJoint (const Inertia& Y, const std::string & body_name, pinocchio::SE3& transform_base_wrt_world) = 0;
+
           virtual void addJointAndBody(
               JointType type,
               const Vector3& axis,
@@ -115,8 +118,13 @@ namespace pinocchio
           {
             addFixedJointAndBody(0, SE3::Identity(), "root_joint", Y, body_name);
 //            appendBodyToJoint(0,Y,SE3::Identity(),body_name); TODO: change for the correct behavior, see https://github.com/stack-of-tasks/pinocchio/pull/1102 for discussions on the topic
+          }
 
-              
+          // NUA EDIT
+          virtual void addRootJoint(const Inertia& Y, const std::string & body_name, pinocchio::SE3& transform_base_wrt_world)
+          {
+            addFixedJointAndBody(0, transform_base_wrt_world, "root_joint", Y, body_name);
+//            appendBodyToJoint(0,Y,SE3::Identity(),body_name); TODO: change for the correct behavior, see https://github.com/stack-of-tasks/pinocchio/pull/1102 for discussions on the topic
           }
 
           void addJointAndBody(
@@ -353,20 +361,45 @@ namespace pinocchio
                 );
 
             FrameIndex jointFrameId = model.addJointFrame(idx, 0);
-            appendBodyToJoint(jointFrameId, Y, SE3::Identity(), body_name);
+
+            appendBodyToJoint(jointFrameId, Y, pinocchio::SE3::Identity(), body_name);
+          }
+
+          // NUA EDIT
+          void addRootJoint(const Inertia& Y, const std::string& body_name, pinocchio::SE3& transform_base_wrt_world)
+          {
+            const Frame & frame = model.frames[0];
+              
+            PINOCCHIO_THROW(!model.existJointName("root_joint"),
+                            std::invalid_argument,
+                            "root_joint already exists as a joint in the kinematic tree.");
+            
+            JointIndex idx = model.addJoint(frame.parent, root_joint,
+                SE3::Identity(), "root_joint"
+                //TODO ,max_effort,max_velocity,min_config,max_config
+                );
+
+            FrameIndex jointFrameId = model.addJointFrame(idx, 0);
+
+            appendBodyToJoint(jointFrameId, Y, transform_base_wrt_world, body_name);
           }
       };
 
       typedef UrdfVisitorBaseTpl<double, 0> UrdfVisitorBase;
 
       void PINOCCHIO_DLLAPI parseRootTree(const ::urdf::ModelInterface * urdfTree,
-                                             UrdfVisitorBase & model);
+                                          UrdfVisitorBase & model);
+
+      // NUA EDIT
+      void PINOCCHIO_DLLAPI parseRootTree(const ::urdf::ModelInterface * urdfTree,
+                                          UrdfVisitorBase& model,
+                                          pinocchio::SE3& transform_base_wrt_world);
 
       void PINOCCHIO_DLLAPI parseRootTree(const std::string & filename,
-                                             UrdfVisitorBase & model);
+                                          UrdfVisitorBase & model);
 
       void PINOCCHIO_DLLAPI parseRootTreeFromXML(const std::string & xmlString,
-                                                    UrdfVisitorBase & model);
+                                                 UrdfVisitorBase & model);
     }
 
     template<typename Scalar, int Options, template<typename,int> class JointCollectionTpl>
@@ -436,6 +469,21 @@ namespace pinocchio
     template<typename Scalar, int Options, template<typename,int> class JointCollectionTpl>
     ModelTpl<Scalar,Options,JointCollectionTpl> &
     buildModel(const boost::shared_ptr< ::urdf::ModelInterface> urdfTree,
+               const typename ModelTpl<Scalar,Options,JointCollectionTpl>::JointModel & rootJoint,
+               pinocchio::SE3& transform_base_wrt_world,
+               ModelTpl<Scalar,Options,JointCollectionTpl> & model,
+               const bool verbose)
+    {
+      PINOCCHIO_CHECK_INPUT_ARGUMENT(urdfTree != NULL);
+      details::UrdfVisitorWithRootJoint<Scalar, Options, JointCollectionTpl> visitor (model, rootJoint);
+      if (verbose) visitor.log = &std::cout;
+      parseRootTree(urdfTree.get(), visitor, transform_base_wrt_world);
+      return model;
+    }
+
+    template<typename Scalar, int Options, template<typename,int> class JointCollectionTpl>
+    ModelTpl<Scalar,Options,JointCollectionTpl> &
+    buildModel(const boost::shared_ptr< ::urdf::ModelInterface> urdfTree,
                ModelTpl<Scalar,Options,JointCollectionTpl> & model,
                const bool verbose)
     {
@@ -458,6 +506,22 @@ namespace pinocchio
       details::UrdfVisitorWithRootJoint<Scalar, Options, JointCollectionTpl> visitor (model, rootJoint);
       if (verbose) visitor.log = &std::cout;
       parseRootTree(urdfTree.get(), visitor);
+      return model;
+    }
+
+    // NUA EDIT
+    template<typename Scalar, int Options, template<typename,int> class JointCollectionTpl>
+    ModelTpl<Scalar,Options,JointCollectionTpl> &
+    buildModel(const std::shared_ptr< ::urdf::ModelInterface> urdfTree,
+               const typename ModelTpl<Scalar,Options,JointCollectionTpl>::JointModel & rootJoint,
+               pinocchio::SE3& transform_base_wrt_world,
+               ModelTpl<Scalar,Options,JointCollectionTpl> & model,
+               const bool verbose)
+    {
+      PINOCCHIO_CHECK_INPUT_ARGUMENT(urdfTree != NULL);
+      details::UrdfVisitorWithRootJoint<Scalar, Options, JointCollectionTpl> visitor (model, rootJoint);
+      if (verbose) visitor.log = &std::cout;
+      parseRootTree(urdfTree.get(), visitor, transform_base_wrt_world);
       return model;
     }
 
