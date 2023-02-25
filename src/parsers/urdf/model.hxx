@@ -466,6 +466,7 @@ namespace pinocchio
       return model;
     }
 
+    // NUA EDIT
     template<typename Scalar, int Options, template<typename,int> class JointCollectionTpl>
     ModelTpl<Scalar,Options,JointCollectionTpl> &
     buildModel(const boost::shared_ptr< ::urdf::ModelInterface> urdfTree,
@@ -491,6 +492,21 @@ namespace pinocchio
       details::UrdfVisitor<Scalar, Options, JointCollectionTpl> visitor (model);
       if (verbose) visitor.log = &std::cout;
       parseRootTree(urdfTree.get(), visitor);
+      return model;
+    }
+
+    // NUA EDIT
+    template<typename Scalar, int Options, template<typename,int> class JointCollectionTpl>
+    ModelTpl<Scalar,Options,JointCollectionTpl> &
+    buildModel(const boost::shared_ptr< ::urdf::ModelInterface> urdfTree,
+               pinocchio::SE3& transform_base_wrt_world,
+               ModelTpl<Scalar,Options,JointCollectionTpl> & model,
+               const bool verbose)
+    {
+      PINOCCHIO_CHECK_INPUT_ARGUMENT(urdfTree != NULL);
+      details::UrdfVisitor<Scalar, Options, JointCollectionTpl> visitor (model);
+      if (verbose) visitor.log = &std::cout;
+      parseRootTree(urdfTree.get(), visitor, transform_base_wrt_world);
       return model;
     }
 
@@ -535,6 +551,21 @@ namespace pinocchio
       details::UrdfVisitor<Scalar, Options, JointCollectionTpl> visitor (model);
       if (verbose) visitor.log = &std::cout;
       parseRootTree(urdfTree.get(), visitor);
+      return model;
+    }
+
+    // NUA EDIT
+    template<typename Scalar, int Options, template<typename,int> class JointCollectionTpl>
+    ModelTpl<Scalar,Options,JointCollectionTpl> &
+    buildModel(const std::shared_ptr< ::urdf::ModelInterface> urdfTree,
+               pinocchio::SE3& transform_base_wrt_world,
+               ModelTpl<Scalar,Options,JointCollectionTpl> & model,
+               const bool verbose)
+    {
+      PINOCCHIO_CHECK_INPUT_ARGUMENT(urdfTree != NULL);
+      details::UrdfVisitor<Scalar, Options, JointCollectionTpl> visitor (model);
+      if (verbose) visitor.log = &std::cout;
+      parseRootTree(urdfTree.get(), visitor, transform_base_wrt_world);
       return model;
     }
 #endif
