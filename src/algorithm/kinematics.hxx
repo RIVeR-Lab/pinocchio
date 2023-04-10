@@ -73,6 +73,13 @@ namespace pinocchio
     PINOCCHIO_CHECK_ARGUMENT_SIZE(q.size(), model.nq, "The configuration vector is not of right size");
     assert(model.check(data) && "data is not consistent with model.");
     
+    if(q.size() != model.nq)
+    {
+      std::cout << "[kinematics.hxx::forwardKinematics(3)] q.size(): " << q.size() << std::endl;
+      std::cout << "[kinematics.hxx::forwardKinematics(3)] model.nq: " << model.nq << std::endl;
+      throw std::runtime_error("[kinematics.hxx::forwardKinematics(3)] ERROR: state and model dim mismatch!");
+    }
+
     typedef typename ModelTpl<Scalar,Options,JointCollectionTpl>::JointIndex JointIndex;
     
     typedef ForwardKinematicZeroStep<Scalar,Options,JointCollectionTpl,ConfigVectorType> Algo;
@@ -136,6 +143,13 @@ namespace pinocchio
     PINOCCHIO_CHECK_ARGUMENT_SIZE(v.size(), model.nv, "The velocity vector is not of right size");
     assert(model.check(data) && "data is not consistent with model.");
     
+    if(q.size() != model.nq)
+    {
+      std::cout << "[kinematics.hxx::forwardKinematics(4)] q.size(): " << q.size() << std::endl;
+      std::cout << "[kinematics.hxx::forwardKinematics(4)] model.nq: " << model.nq << std::endl;
+      throw std::runtime_error("[kinematics.hxx::forwardKinematics(4)] ERROR: state and model dim mismatch!");
+    }
+
     typedef typename ModelTpl<Scalar,Options,JointCollectionTpl>::JointIndex JointIndex;
     
     data.v[0].setZero();
@@ -206,6 +220,13 @@ namespace pinocchio
     PINOCCHIO_CHECK_ARGUMENT_SIZE(a.size(), model.nv, "The acceleration vector is not of right size");
     assert(model.check(data) && "data is not consistent with model.");
     
+    if(q.size() != model.nq)
+    {
+      std::cout << "[kinematics.hxx::forwardKinematics(5)] q.size(): " << q.size() << std::endl;
+      std::cout << "[kinematics.hxx::forwardKinematics(5)] model.nq: " << model.nq << std::endl;
+      throw std::runtime_error("[kinematics.hxx::forwardKinematics(5)] ERROR: state and model dim mismatch!");
+    }
+
     typedef typename ModelTpl<Scalar,Options,JointCollectionTpl>::JointIndex JointIndex;
     
     data.v[0].setZero();
